@@ -41,7 +41,9 @@ def test_feature_count() -> None:
 def test_constant_holding_has_the_closed_form_loss() -> None:
     paths = gbm_paths(64, 10, T, 0.2, seed=0)
     contract = Contract(cost_rate=0.01)
-    loss, deltas = rollout(_constant_net(0.4, 3), torch.as_tensor(paths, dtype=DTYPE), None, contract)
+    loss, deltas = rollout(
+        _constant_net(0.4, 3), torch.as_tensor(paths, dtype=DTYPE), None, contract
+    )
     assert torch.allclose(deltas, torch.full_like(deltas, 0.4))
     # buy 0.4 shares once at S0, hold to expiry
     expected = payoff(paths[:, -1], K) - 0.4 * (paths[:, -1] - 100.0) + 0.01 * 0.4 * 100.0
@@ -96,7 +98,12 @@ def test_training_is_deterministic() -> None:
     contract = Contract(cost_rate=0.002)
     a = train(paths, None, contract, cfg)
     b = train(paths, None, contract, cfg)
-    c = train(paths, None, contract, TrainConfig(iterations=20, batch_size=256, hidden=8, layers=2, seed=6))
+    c = train(
+        paths,
+        None,
+        contract,
+        TrainConfig(iterations=20, batch_size=256, hidden=8, layers=2, seed=6),
+    )
     np.testing.assert_array_equal(a.history, b.history)
     np.testing.assert_array_equal(a.deltas(paths), b.deltas(paths))
     assert not np.array_equal(a.history, c.history)
@@ -110,7 +117,9 @@ def test_training_lowers_the_objective() -> None:
 
 def test_policy_agrees_with_rollout() -> None:
     prices, variances = heston_paths(50, 6, T, HestonParams(), seed=7)
-    hedge = train(prices, variances, Contract(cost_rate=0.001), TrainConfig(iterations=3, batch_size=50))
+    hedge = train(
+        prices, variances, Contract(cost_rate=0.001), TrainConfig(iterations=3, batch_size=50)
+    )
     d = hedge.deltas(prices, variances)
     first = hedge.policy(prices[:, 0], 0, 6, prev=np.zeros(50), variance=variances[:, 0])
     np.testing.assert_allclose(first, d[:, 0], atol=1e-6)
@@ -125,7 +134,9 @@ def test_network_recovers_black_scholes_delta_at_zero_cost() -> None:
     # the network hedge is close to the model hedge.
     train_paths = gbm_paths(40_000, 30, T, 0.2, seed=8)
     test_paths = gbm_paths(20_000, 30, T, 0.2, seed=9)
-    hedge = train(train_paths, None, Contract(), TrainConfig(iterations=600, batch_size=1024, seed=0))
+    hedge = train(
+        train_paths, None, Contract(), TrainConfig(iterations=600, batch_size=1024, seed=0)
+    )
     net_delta = hedge.deltas(test_paths)
     model_delta = bs_deltas(test_paths, K, T, 0.2)
     assert np.abs(net_delta - model_delta).mean() < 0.03

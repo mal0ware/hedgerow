@@ -17,7 +17,9 @@ def test_cvar_is_the_minimum_of_the_oce_objective() -> None:
     rng = np.random.default_rng(0)
     x = rng.standard_t(5, size=20_001)
     for alpha in (0.5, 0.9, 0.99):
-        best = minimize_scalar(lambda w, a=alpha: oce_objective(x, w, a), bounds=(-20, 20), method="bounded")
+        best = minimize_scalar(
+            lambda w, a=alpha: oce_objective(x, w, a), bounds=(-20, 20), method="bounded"
+        )
         assert cvar(x, alpha) == pytest.approx(best.fun, abs=1e-6)
         assert cvar(x, alpha) <= oce_objective(x, 0.0, alpha) + 1e-12
 

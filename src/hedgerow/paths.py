@@ -48,13 +48,13 @@ def gbm_paths(
     dt = maturity / n_steps
     z = rng.standard_normal((n_paths, n_steps))
     log_increments = (drift - 0.5 * vol * vol) * dt + vol * np.sqrt(dt) * z
-    log_paths = np.concatenate(
-        [np.zeros((n_paths, 1)), np.cumsum(log_increments, axis=1)], axis=1
-    )
+    log_paths = np.concatenate([np.zeros((n_paths, 1)), np.cumsum(log_increments, axis=1)], axis=1)
     return np.asarray(s0 * np.exp(log_paths), dtype=np.float64)
 
 
-def cir_step(v: FloatArray, dt: float, params: HestonParams, rng: np.random.Generator) -> FloatArray:
+def cir_step(
+    v: FloatArray, dt: float, params: HestonParams, rng: np.random.Generator
+) -> FloatArray:
     """One exact draw from the CIR transition law (Glasserman 2004, Section 3.4).
 
     V(t + dt) given V(t) is c times a noncentral chi-square with

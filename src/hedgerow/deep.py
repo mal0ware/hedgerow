@@ -166,7 +166,9 @@ class TrainedHedge:
     recurrent: bool
     history: FloatArray
 
-    def deltas(self, prices: FloatArray, variances: FloatArray | None = None, chunk: int = 50_000) -> FloatArray:
+    def deltas(
+        self, prices: FloatArray, variances: FloatArray | None = None, chunk: int = 50_000
+    ) -> FloatArray:
         """Holdings on new paths, as a numpy array of shape ``(n_paths, n_steps)``."""
         if self.use_variance and variances is None:
             raise ValueError("this network was trained with the variance as an input")
@@ -178,7 +180,9 @@ class TrainedHedge:
                 p = torch.as_tensor(prices[start : start + chunk], dtype=DTYPE, device=device)
                 v = None
                 if self.use_variance and variances is not None:
-                    v = torch.as_tensor(variances[start : start + chunk], dtype=DTYPE, device=device)
+                    v = torch.as_tensor(
+                        variances[start : start + chunk], dtype=DTYPE, device=device
+                    )
                 _, d = rollout(self.net, p, v, self.contract, self.recurrent)
                 out.append(np.asarray(d.cpu().numpy(), dtype=np.float64))
         return np.concatenate(out, axis=0)

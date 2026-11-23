@@ -32,7 +32,9 @@ def norm_cdf(x: ArrayLike) -> FloatArray:
     return np.asarray(ndtr(np.asarray(x, dtype=np.float64)), dtype=np.float64)
 
 
-def d1(spot: ArrayLike, strike: float, tau: ArrayLike, vol: ArrayLike, rate: float = 0.0) -> FloatArray:
+def d1(
+    spot: ArrayLike, strike: float, tau: ArrayLike, vol: ArrayLike, rate: float = 0.0
+) -> FloatArray:
     """The Black-Scholes d1. Returns +/- infinity at ``tau == 0`` or ``vol == 0``."""
     s = np.asarray(spot, dtype=np.float64)
     t = np.asarray(tau, dtype=np.float64)
@@ -84,7 +86,9 @@ def delta(
     return np.asarray(call - 1.0, dtype=np.float64)
 
 
-def gamma(spot: ArrayLike, strike: float, tau: ArrayLike, vol: ArrayLike, rate: float = 0.0) -> FloatArray:
+def gamma(
+    spot: ArrayLike, strike: float, tau: ArrayLike, vol: ArrayLike, rate: float = 0.0
+) -> FloatArray:
     """Second derivative of the price with respect to spot (same for calls and puts)."""
     s = np.asarray(spot, dtype=np.float64)
     t = np.asarray(tau, dtype=np.float64)
@@ -95,7 +99,9 @@ def gamma(spot: ArrayLike, strike: float, tau: ArrayLike, vol: ArrayLike, rate: 
     return np.asarray(np.where(total > 0.0, out, 0.0), dtype=np.float64)
 
 
-def vega(spot: ArrayLike, strike: float, tau: ArrayLike, vol: ArrayLike, rate: float = 0.0) -> FloatArray:
+def vega(
+    spot: ArrayLike, strike: float, tau: ArrayLike, vol: ArrayLike, rate: float = 0.0
+) -> FloatArray:
     """Derivative of the price with respect to volatility, per unit of volatility."""
     s = np.asarray(spot, dtype=np.float64)
     t = np.asarray(tau, dtype=np.float64)

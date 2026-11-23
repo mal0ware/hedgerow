@@ -42,7 +42,9 @@ def test_gbm_call_price_matches_black_scholes() -> None:
     n = 400_000
     paths = gbm_paths(n, 1, T, 0.2, seed=11)
     pay = np.maximum(paths[:, -1] - 100.0, 0.0)
-    assert pay.mean() == pytest.approx(bs.price(100.0, 100.0, T, 0.2), abs=4 * pay.std() / np.sqrt(n))
+    assert pay.mean() == pytest.approx(
+        bs.price(100.0, 100.0, T, 0.2), abs=4 * pay.std() / np.sqrt(n)
+    )
 
 
 def test_heston_same_seed_same_paths() -> None:
@@ -92,7 +94,9 @@ def test_heston_reduces_to_black_scholes_when_variance_is_frozen() -> None:
     s, v = heston_paths(n, 30, T, params, seed=9)
     np.testing.assert_allclose(v, 0.04, atol=1e-6)
     pay = np.maximum(s[:, -1] - 100.0, 0.0)
-    assert pay.mean() == pytest.approx(bs.price(100.0, 100.0, T, 0.2), abs=4 * pay.std() / np.sqrt(n))
+    assert pay.mean() == pytest.approx(
+        bs.price(100.0, 100.0, T, 0.2), abs=4 * pay.std() / np.sqrt(n)
+    )
 
 
 def test_heston_call_price_matches_buehler() -> None:

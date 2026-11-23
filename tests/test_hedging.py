@@ -3,8 +3,8 @@ import pytest
 
 from hedgerow import black_scholes as bs
 from hedgerow.hedging import (
-    bs_deltas,
     boyle_emanuel_scale,
+    bs_deltas,
     derman_kamal_std,
     discrete_hedge_std,
     hedge_pnl,
@@ -19,7 +19,9 @@ VOL = 0.2
 T = 30 / 365
 
 
-def _bs_error(n_steps: int, n_paths: int, seed: int, cost: float = 0.0, hedge_vol: float = VOL) -> np.ndarray:
+def _bs_error(
+    n_steps: int, n_paths: int, seed: int, cost: float = 0.0, hedge_vol: float = VOL
+) -> np.ndarray:
     paths = gbm_paths(n_paths, n_steps, T, VOL, seed)
     deltas = bs_deltas(paths, K, T, hedge_vol)
     premium = float(bs.price(S0, K, T, hedge_vol))

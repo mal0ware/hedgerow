@@ -40,7 +40,9 @@ def normal_cvar(mean: float, std: float, alpha: float) -> float:
     return float(mean + std * float(norm.pdf(z)) / (1.0 - alpha))
 
 
-def paired_block_difference(a: FloatArray, b: FloatArray, alpha: float, n_blocks: int = 20) -> tuple[float, float]:
+def paired_block_difference(
+    a: FloatArray, b: FloatArray, alpha: float, n_blocks: int = 20
+) -> tuple[float, float]:
     """Mean and standard error of CVaR(a) - CVaR(b) across equal blocks of paths.
 
     ``a`` and ``b`` are losses of two strategies on the same paths, in the same
