@@ -122,7 +122,7 @@ def cir_mean(t: float, params: HestonParams) -> float:
 
 
 def cir_variance(t: float, params: HestonParams) -> float:
-    """Var[V_t] for the CIR variance (Cox, Ingersoll and Ross 1985, Eq. (19))."""
+    """Var[V_t] for the CIR variance. Standard result; checked here by simulation only."""
     decay = np.exp(-params.kappa * t)
     a = params.v0 * params.xi**2 / params.kappa * (decay - decay**2)
     b = params.theta * params.xi**2 / (2.0 * params.kappa) * (1.0 - decay) ** 2
