@@ -1,0 +1,17 @@
+built_for,cost_rate,alpha,target,width,validation_cvar
+black_scholes,0.0,0.5,bs_delta,0.0,2.555253469616829
+black_scholes,0.0,0.99,bs_delta,0.02,3.494800920425863
+black_scholes,0.001,0.5,bs_delta,0.03,2.7569913471972676
+black_scholes,0.001,0.99,leland,0.03,3.6639713353744967
+black_scholes,0.005,0.5,bs_delta,0.1,3.323924368569314
+black_scholes,0.005,0.99,leland,0.03,4.2916874730467365
+black_scholes,0.01,0.5,bs_delta,0.15,3.8516092851039905
+black_scholes,0.01,0.99,leland,0.03,5.027843923674841
+heston,0.0,0.5,heston_min_var,0.0,2.568621585165557
+heston,0.0,0.99,heston_min_var,0.02,6.157579687123568
+heston,0.001,0.5,heston_min_var,0.05,2.710021434543022
+heston,0.001,0.99,heston_min_var,0.03,6.360164212424991
+heston,0.005,0.5,heston_delta,0.5,2.994458391893355
+heston,0.005,0.99,heston_min_var,0.075,6.992320756302289
+heston,0.01,0.5,heston_delta,0.6,3.1939041340974974
+heston,0.01,0.99,heston_min_var,0.1,7.635580180582993

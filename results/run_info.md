@@ -4,12 +4,19 @@
 - torch: 2.15.0+cpu
 - numpy: 2.5.5
 - network dtype: float32
-- torch threads: 1
+- torch threads per network: 1
 - training paths per world: 200000
+- validation paths per world: 200000
 - test paths per world: 200000
 - rebalances: 30 over 30 days
 - cost rates: 0 bp, 10 bp, 50 bp, 100 bp
 - CVaR levels: 0.5, 0.99
-- iterations per level: 3000, 2000
+- training seeds: 0, 1, 2, 3, 4
+- training steps tried per level: 1500, 3000, 6000; 1000, 2000, 4000
+- training steps chosen per level: 6000, 4000
 - batch size per level: 1024, 4096
+- networks trained: 104
+- Black-Scholes call value: 2.2872
+- Heston call value (Fourier inversion): 1.6919
+- Heston implied volatility: 14.79%
 - base seed: 20261123

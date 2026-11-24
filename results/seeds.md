@@ -1,12 +1,86 @@
-# Spread across training seeds
+# Every network, by training seed
 
-| Paths | Training seed | Network CVaR 50% | Leland CVaR 50% | Network std |
-| --- | ---: | ---: | ---: | ---: |
-| Black-Scholes paths | 0 | 3.3162 | 3.6009 | 0.6282 |
-| Black-Scholes paths | 1 | 3.3302 | 3.6009 | 0.6412 |
-| Black-Scholes paths | 2 | 3.3379 | 3.6009 | 0.6280 |
-| Heston paths | 0 | 2.8848 | 3.6270 | 1.6207 |
-| Heston paths | 1 | 2.8826 | 3.6270 | 1.6138 |
-| Heston paths | 2 | 2.8812 | 3.6270 | 1.6173 |
+| Paths | Cost (bp) | CVaR level | Training seed | Network CVaR | Network minus band | Network std |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Black-Scholes paths | 0 | 50% | 0 | 2.5560 | 0.0000 | 0.3603 |
+| Black-Scholes paths | 0 | 50% | 1 | 2.5560 | -0.0000 | 0.3609 |
+| Black-Scholes paths | 0 | 50% | 2 | 2.5565 | 0.0005 | 0.3610 |
+| Black-Scholes paths | 0 | 50% | 3 | 2.5557 | -0.0004 | 0.3608 |
+| Black-Scholes paths | 0 | 50% | 4 | 2.5558 | -0.0003 | 0.3603 |
+| Black-Scholes paths | 0 | 99% | 0 | 3.2710 | -0.2321 | 0.4441 |
+| Black-Scholes paths | 0 | 99% | 1 | 3.2667 | -0.2364 | 0.4421 |
+| Black-Scholes paths | 0 | 99% | 2 | 3.2702 | -0.2328 | 0.4462 |
+| Black-Scholes paths | 0 | 99% | 3 | 3.2677 | -0.2354 | 0.4436 |
+| Black-Scholes paths | 0 | 99% | 4 | 3.2684 | -0.2347 | 0.4452 |
+| Black-Scholes paths | 10 | 50% | 0 | 2.7583 | 0.0005 | 0.3928 |
+| Black-Scholes paths | 10 | 50% | 1 | 2.7595 | 0.0017 | 0.3924 |
+| Black-Scholes paths | 10 | 50% | 2 | 2.7592 | 0.0014 | 0.3946 |
+| Black-Scholes paths | 10 | 50% | 3 | 2.7588 | 0.0010 | 0.3933 |
+| Black-Scholes paths | 10 | 50% | 4 | 2.7581 | 0.0003 | 0.3949 |
+| Black-Scholes paths | 10 | 99% | 0 | 3.4883 | -0.1872 | 0.4601 |
+| Black-Scholes paths | 10 | 99% | 1 | 3.4859 | -0.1896 | 0.4598 |
+| Black-Scholes paths | 10 | 99% | 2 | 3.4896 | -0.1859 | 0.4652 |
+| Black-Scholes paths | 10 | 99% | 3 | 3.4847 | -0.1908 | 0.4633 |
+| Black-Scholes paths | 10 | 99% | 4 | 3.4877 | -0.1878 | 0.4648 |
+| Black-Scholes paths | 50 | 50% | 0 | 3.3102 | -0.0167 | 0.6343 |
+| Black-Scholes paths | 50 | 50% | 1 | 3.3036 | -0.0234 | 0.6867 |
+| Black-Scholes paths | 50 | 50% | 2 | 3.3326 | 0.0057 | 0.6359 |
+| Black-Scholes paths | 50 | 50% | 3 | 3.2944 | -0.0325 | 0.6939 |
+| Black-Scholes paths | 50 | 50% | 4 | 3.3218 | -0.0051 | 0.6234 |
+| Black-Scholes paths | 50 | 99% | 0 | 4.2472 | -0.0578 | 0.5298 |
+| Black-Scholes paths | 50 | 99% | 1 | 4.2559 | -0.0492 | 0.5313 |
+| Black-Scholes paths | 50 | 99% | 2 | 4.2523 | -0.0528 | 0.5399 |
+| Black-Scholes paths | 50 | 99% | 3 | 4.2368 | -0.0683 | 0.5429 |
+| Black-Scholes paths | 50 | 99% | 4 | 4.2395 | -0.0656 | 0.5352 |
+| Black-Scholes paths | 100 | 50% | 0 | 3.8121 | -0.0443 | 0.9806 |
+| Black-Scholes paths | 100 | 50% | 1 | 3.8025 | -0.0540 | 0.9658 |
+| Black-Scholes paths | 100 | 50% | 2 | 3.8077 | -0.0487 | 0.9831 |
+| Black-Scholes paths | 100 | 50% | 3 | 3.7957 | -0.0607 | 0.9554 |
+| Black-Scholes paths | 100 | 50% | 4 | 3.8271 | -0.0293 | 0.9810 |
+| Black-Scholes paths | 100 | 99% | 0 | 5.0469 | 0.0075 | 0.6325 |
+| Black-Scholes paths | 100 | 99% | 1 | 5.0527 | 0.0132 | 0.6239 |
+| Black-Scholes paths | 100 | 99% | 2 | 5.0479 | 0.0084 | 0.6382 |
+| Black-Scholes paths | 100 | 99% | 3 | 5.0309 | -0.0085 | 0.6381 |
+| Black-Scholes paths | 100 | 99% | 4 | 5.0407 | 0.0012 | 0.6342 |
+| Heston paths | 0 | 50% | 0 | 2.5367 | -0.0308 | 1.2856 |
+| Heston paths | 0 | 50% | 1 | 2.5374 | -0.0301 | 1.2873 |
+| Heston paths | 0 | 50% | 2 | 2.5369 | -0.0306 | 1.2826 |
+| Heston paths | 0 | 50% | 3 | 2.5373 | -0.0302 | 1.2906 |
+| Heston paths | 0 | 50% | 4 | 2.5368 | -0.0307 | 1.2644 |
+| Heston paths | 0 | 99% | 0 | 5.8494 | -0.2841 | 1.3539 |
+| Heston paths | 0 | 99% | 1 | 5.8567 | -0.2768 | 1.3647 |
+| Heston paths | 0 | 99% | 2 | 5.8541 | -0.2794 | 1.3583 |
+| Heston paths | 0 | 99% | 3 | 5.8513 | -0.2822 | 1.3623 |
+| Heston paths | 0 | 99% | 4 | 5.8539 | -0.2796 | 1.3496 |
+| Heston paths | 10 | 50% | 0 | 2.6688 | -0.0412 | 1.3615 |
+| Heston paths | 10 | 50% | 1 | 2.6678 | -0.0422 | 1.3363 |
+| Heston paths | 10 | 50% | 2 | 2.6674 | -0.0426 | 1.3427 |
+| Heston paths | 10 | 50% | 3 | 2.6685 | -0.0415 | 1.3300 |
+| Heston paths | 10 | 50% | 4 | 2.6692 | -0.0408 | 1.3290 |
+| Heston paths | 10 | 99% | 0 | 6.0452 | -0.2964 | 1.3153 |
+| Heston paths | 10 | 99% | 1 | 6.0544 | -0.2872 | 1.3309 |
+| Heston paths | 10 | 99% | 2 | 6.0485 | -0.2931 | 1.3311 |
+| Heston paths | 10 | 99% | 3 | 6.0502 | -0.2914 | 1.3384 |
+| Heston paths | 10 | 99% | 4 | 6.0515 | -0.2902 | 1.3167 |
+| Heston paths | 50 | 50% | 0 | 2.8826 | -0.1114 | 1.6321 |
+| Heston paths | 50 | 50% | 1 | 2.8817 | -0.1123 | 1.6197 |
+| Heston paths | 50 | 50% | 2 | 2.8806 | -0.1134 | 1.6301 |
+| Heston paths | 50 | 50% | 3 | 2.8848 | -0.1092 | 1.6205 |
+| Heston paths | 50 | 50% | 4 | 2.8799 | -0.1141 | 1.6276 |
+| Heston paths | 50 | 99% | 0 | 6.6945 | -0.2981 | 1.3971 |
+| Heston paths | 50 | 99% | 1 | 6.6867 | -0.3060 | 1.3997 |
+| Heston paths | 50 | 99% | 2 | 6.6758 | -0.3169 | 1.3935 |
+| Heston paths | 50 | 99% | 3 | 6.6860 | -0.3067 | 1.3966 |
+| Heston paths | 50 | 99% | 4 | 6.6923 | -0.3004 | 1.3917 |
+| Heston paths | 100 | 50% | 0 | 3.0024 | -0.1933 | 1.7526 |
+| Heston paths | 100 | 50% | 1 | 3.0012 | -0.1946 | 1.7492 |
+| Heston paths | 100 | 50% | 2 | 2.9997 | -0.1961 | 1.7572 |
+| Heston paths | 100 | 50% | 3 | 3.0027 | -0.1931 | 1.7466 |
+| Heston paths | 100 | 50% | 4 | 3.0044 | -0.1914 | 1.7441 |
+| Heston paths | 100 | 99% | 0 | 7.3432 | -0.3006 | 1.4708 |
+| Heston paths | 100 | 99% | 1 | 7.3334 | -0.3103 | 1.4826 |
+| Heston paths | 100 | 99% | 2 | 7.3084 | -0.3353 | 1.5058 |
+| Heston paths | 100 | 99% | 3 | 7.3282 | -0.3155 | 1.4758 |
+| Heston paths | 100 | 99% | 4 | 7.3262 | -0.3175 | 1.4952 |
 
-Cost 50 bp. Same training and test paths; only the network's initial weights and batch order change.
+Same training and test paths in every row of a cell. Only the initial weights of the network and the order of its batches change with the seed.
