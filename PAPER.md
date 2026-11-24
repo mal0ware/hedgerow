@@ -1,6 +1,6 @@
 # Sources, formulas and comparison
 
-Every formula the code uses is listed here with where it was read. Two of the three named sources could not be reached and are marked.
+Every formula the code uses is listed here with where it was read. Sources that could not be reached are marked.
 
 ## 1. Sources and what was actually read
 
@@ -11,6 +11,7 @@ Every formula the code uses is listed here with where it was read. Two of the th
 | Boyle and Emanuel, "Discretely adjusted option hedges", Journal of Financial Economics 8(3), 1980 | **No.** ScienceDirect returned 403 and no open copy was found | Result derived in section 2 and checked by simulation |
 | Kabanov and Safarian, "On Leland's strategy of option pricing with transactions costs", Finance and Stochastics 1, 1997 | Yes | link.springer.com/content/pdf/10.1007/s007800050023.pdf |
 | Kamal and Derman, "When You Cannot Hedge Continuously: The Corrections to Black-Scholes", Goldman Sachs Quantitative Strategies Research Notes, 1998 (Risk, January 1999) | Yes | emanuelderman.com |
+| Heston, "A Closed-Form Solution for Options with Stochastic Volatility", Review of Financial Studies 6(2), 1993, and Albrecher, Mayer, Schoutens and Tistaert, "The Little Heston Trap", Wilmott Magazine, 2007 | **No.** Neither was opened for this work | Characteristic function written from memory of the standard form and checked numerically (section 2.6) |
 
 Kabanov and Safarian restate Leland's strategy in order to prove a theorem about it, so their statement of the formula is reliable. For Boyle and Emanuel only the abstract-level description was available: the hedging error over a short interval is proportional to gamma and follows a chi-square law. The exact form used here is derived below from the Black-Scholes equation. Equation numbers from the 1980 paper cannot be given.
 
@@ -76,11 +77,45 @@ All from the arXiv version of Buehler et al.
 - Expected integrated variance, Eq. (5.4): L(t, v) = (v − b)/α (1 − e^{−α(T−t)}) + b(T − t). Used only as a test of the simulator.
 - Setting, Section 5.1: T = 30/365, n = 30 daily rebalances, at-the-money call.
 
+### 2.6 Heston price and deltas
+
+Used for the formula hedges on Heston paths. Code: `heston.py`.
+
+Let X = ln(S_T/S_t). Under the martingale measure E[exp(iuX)] = exp(A(u) + B(u)V), with
+
+    b = κ − ρξiu,   d = √(b² + ξ²(iu + u²)),   g = (b − d)/(b + d),
+    B = (b − d)/ξ² · (1 − e^{−dτ})/(1 − g e^{−dτ}),
+    A = κθ/ξ² · ((b − d)τ − 2 ln((1 − g e^{−dτ})/(1 − g))).
+
+This is the form usually credited to Albrecher et al., which keeps the logarithm on its principal branch. I did not read that paper or Heston's. The formula was accepted on four checks: A and B vanish at u = 0 and at u = −i; the call price is 1.6919 against the 1.69 printed in the deep hedging paper; with ξ near zero the price and delta match Black-Scholes to 0.0002; and the two deltas below match finite differences of the price. All four are in `tests/test_heston.py`.
+
+Under the measure that uses the stock as numeraire X has characteristic function exp(A(u − i) + B(u − i)V). Its density f is recovered by one FFT. With k = ln(K/S),
+
+    ∂C/∂S = P(X > k),    C/S = ∫ over x > k of (1 − e^{k−x}) f(x) dx,
+
+and ∂C/∂V comes from the same integrals applied to the inverse transform of B(u − i) times the characteristic function. A hedger who trades only the stock and wants the smallest variance of the next change in the hedged position holds
+
+    δ_mv = ∂C/∂S + ρξ (∂C/∂V)/S,
+
+because d⟨S, V⟩/d⟨S⟩ = ρξ/S. With ρ = −0.7 this is well below ∂C/∂S.
+
+Two numerical choices. The characteristic function is multiplied by exp(−ε²u²/2) with ε = 0.0002, which blurs X by 0.02% of spot, because with V near zero the density is close to a point mass. The deltas are tabulated on 1,201 moneyness points and 96 variance points per date and read by bilinear interpolation.
+
+The implied volatility of the Heston call is 14.79%. The Leland and Black-Scholes hedges built for the Heston world use it.
+
+### 2.7 The no-trade band
+
+Not from a source. The hedger has a target delta δ*_k and a half-width w, and holds δ_k = min(max(δ_{k−1}, δ*_k − w), δ*_k + w), starting from zero shares. The target is one of the formula deltas for that world and w is one of 15 values from 0 to 1 share. For each world, cost and CVaR level the pair with the lowest CVaR on validation paths is kept. Width zero is the plain formula hedge, so on validation paths the band is never worse than the best formula. The literature on hedging with proportional costs has bands whose width depends on gamma (Whalley and Wilmott 1997 is the usual reference, not read). The constant width here is cruder. Code: `experiments.band_deltas`, `experiments.choose_bands`.
+
+### 2.8 When a difference counts
+
+For each cell and each of five training seeds, d_s is the network's CVaR minus the other strategy's on the same test paths. Let s be the standard deviation of d_s across seeds and e the mean standard error of d_s from the finite test set (paired, over 20 blocks of 10,000 paths). The noise in one trained network is taken as √(s² + e²). The cell goes to the network or to the formula when the mean of d_s is more than twice that, and is a tie otherwise. This is stricter than testing the mean of five seeds. It asks whether a sixth network would be expected to land on the same side. Code: `experiments.judge`.
+
 The volatility of variance σ = 2 looks like a misprint for 0.2, since it puts the Feller ratio 2αb/σ² at 0.02. It is not: the simulator with σ = 2 gives an option price of 1.702 (standard error 0.002) on a million paths, and the paper prints q = 1.69. With σ = 0.2 the same simulator gives 2.279, next to the Black-Scholes value of 2.287. With σ = 2 the variance is at or near zero at expiry on 69% of paths (below 0.0001), and very large on a few. This is the world the paper trained in, and it is an extreme one.
 
 ## 3. Claim by claim
 
-All numbers below come from `results/`, produced by `scripts/reproduce.py` on an Intel Core i9-13900K, CPU only, one thread. The contract is a short at-the-money call, S = K = 100, T = 30/365, zero rates, σ = 0.2 in the Black-Scholes world.
+Numbers below come from `results/`, produced by `scripts/reproduce.py` on an Intel Core i9-13900K, CPU only, one thread per network. The few that come from a test instead say so. The contract is a short at-the-money call, S = K = 100, T = 30/365, zero rates, σ = 0.2 in the Black-Scholes world.
 
 ### 3.1 Discrete hedging without costs
 
@@ -112,69 +147,107 @@ At 50 bp one way, each hedger charging the price at its own volatility, entry tr
 
 | Claim | Source | Here | Match |
 | --- | --- | --- | --- |
-| Heston call price q = 1.69 | Section 5.2 | 1.702 ± 0.002 on a million paths; 1.706 as the mean loss of the costless hedges on the test set | Close. 0.012 above, about five standard errors |
-| With no costs and 50% CVaR the network is close to the model hedge | Section 5.2, Figure 2 | Black-Scholes paths: network CVaR 2.556, Black-Scholes delta 2.555; std 0.361 against 0.358 | Yes, in the Black-Scholes world. The paper's test was in Heston with a variance swap, which is not built here |
-| A 99% CVaR hedge has a thinner tail and a wider body than a 50% one | Section 5.2, Figures 6 and 7 | In all eight cells the 99% network has the lower 99% CVaR and the higher 50% CVaR | Yes |
+| Heston call price q = 1.69 | Section 5.2 | 1.6919 by Fourier inversion. The simulator gives a mean payoff of 1.705 on the 200,000 test paths | Yes for the continuous model. The simulator, which holds the variance fixed within each day as the paper's footnote 5 describes, is about 0.01 higher |
+| With no costs and 50% CVaR the network is close to the model hedge | Section 5.2, Figure 2 | Black-Scholes paths: network CVaR 2.556, Black-Scholes delta 2.556; std 0.361 against 0.358 | Yes, in the Black-Scholes world. The paper's test was in Heston with a variance swap, which is not built here |
+| A 99% CVaR hedge has a thinner tail and a wider body than a 50% one | Section 5.2, Figures 6 and 7 | In all eight cells the 99% network has the lower 99% CVaR and the higher 50% CVaR (means of five seeds) | Yes |
 | The recurrent input is needed under costs | Section 5.2, footnote 7, Figure 5 | Not run without the recurrent input | Not tested |
 | Price rises as ε^(2/3) for small costs | Section 5.3, Eq. (5.8) | Not run. The paper's test uses the entropic risk measure, which is not built here | Not tested |
 
-### 3.4 The question in the README
+### 3.4 Does the network beat the formulas?
 
-Does the network beat Leland? Each network is scored on the CVaR level it was trained on, on 200,000 test paths the training never saw. Differences are network minus Leland, with the standard error of the paired difference over 20 blocks of paths.
+Each network is scored on the CVaR level it was trained on, on 200,000 test paths. Entries are the mean over five seeds of network minus the other strategy, with the noise of section 2.8. A star marks a difference that clears twice the noise.
 
-| Paths | Cost | 50% CVaR | 99% CVaR |
-| --- | ---: | ---: | ---: |
-| Black-Scholes | 0 bp | +0.001 ± 0.000 | −0.249 ± 0.009 |
-| Black-Scholes | 10 bp | −0.019 ± 0.000 | −0.253 ± 0.009 |
-| Black-Scholes | 50 bp | −0.285 ± 0.001 | −0.322 ± 0.009 |
-| Black-Scholes | 100 bp | −0.689 ± 0.003 | −0.487 ± 0.010 |
-| Heston | 0 bp | −0.131 ± 0.004 | −2.026 ± 0.041 |
-| Heston | 10 bp | −0.206 ± 0.004 | −2.115 ± 0.040 |
-| Heston | 50 bp | −0.742 ± 0.006 | −2.552 ± 0.044 |
-| Heston | 100 bp | −1.456 ± 0.008 | −3.198 ± 0.047 |
+| Paths | Cost | Level | Minus Leland at 20% vol | Minus Leland | Minus band |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Black-Scholes | 0 bp | 50% | −0.000 ± 0.000 | same hedge | −0.000 ± 0.000 |
+| Black-Scholes | 10 bp | 50% | −0.023 ± 0.001 * | same hedge | +0.001 ± 0.001 |
+| Black-Scholes | 50 bp | 50% | −0.289 ± 0.015 * | same hedge | −0.014 ± 0.015 |
+| Black-Scholes | 100 bp | 50% | −0.702 ± 0.012 * | same hedge | −0.047 ± 0.012 * |
+| Black-Scholes | 0 bp | 99% | −0.251 ± 0.007 * | same hedge | −0.234 ± 0.008 * |
+| Black-Scholes | 10 bp | 99% | −0.255 ± 0.007 * | same hedge | −0.188 ± 0.007 * |
+| Black-Scholes | 50 bp | 99% | −0.340 ± 0.010 * | same hedge | −0.059 ± 0.010 * |
+| Black-Scholes | 100 bp | 99% | −0.513 ± 0.011 * | same hedge | +0.004 ± 0.010 |
+| Heston | 0 bp | 50% | −0.137 ± 0.003 * | −0.110 ± 0.003 * | −0.030 ± 0.003 * |
+| Heston | 10 bp | 50% | −0.211 ± 0.004 * | −0.204 ± 0.004 * | −0.042 ± 0.002 * |
+| Heston | 50 bp | 50% | −0.747 ± 0.006 * | −0.801 ± 0.006 * | −0.112 ± 0.004 * |
+| Heston | 100 bp | 50% | −1.465 ± 0.007 * | −1.576 ± 0.008 * | −0.194 ± 0.003 * |
+| Heston | 0 bp | 99% | −2.125 ± 0.040 * | −2.702 ± 0.049 * | −0.280 ± 0.016 * |
+| Heston | 10 bp | 99% | −2.215 ± 0.040 * | −2.808 ± 0.048 * | −0.292 ± 0.016 * |
+| Heston | 50 bp | 99% | −2.676 ± 0.042 * | −3.344 ± 0.048 * | −0.306 ± 0.020 * |
+| Heston | 100 bp | 99% | −3.317 ± 0.048 * | −4.088 ± 0.052 * | −0.316 ± 0.023 * |
 
-The network is lower in 15 of 16 cells. The exception is the costless Black-Scholes case at 50%, where it lands 0.001 above the formula it is supposed to recover.
+"Leland" is at the volatility that prices the call: 20% on Black-Scholes paths, 14.79% on Heston paths. The numbers are in `results/headline.csv`.
 
-What that table leaves out, from `results/comparison.md`:
+Counts over the 16 cells. Against Leland at 20%: network lower in 15, tie in 1. Against Leland at the right volatility: the same. Against the band: network lower in 12, tie in 4. No cell goes to a formula.
 
-- Leland has the smaller standard deviation on Black-Scholes paths at every positive cost. At 50 bp it is 0.418, against 0.628 for the 50% network and 0.544 for the 99% network.
-- A network is only good on the measure it was trained on. At 100 bp on Black-Scholes paths the 50% network has a 99% CVaR of 7.131, worse than Leland (5.545) and worse than the plain Black-Scholes delta (7.017). On Heston paths the 50% network has a worse 99% CVaR than Leland at every cost level.
-- Most of the 50% network's advantage is cost it does not pay. At 50 bp on Black-Scholes paths it trades 1.11 shares over the life against Leland's 1.99 and pays 0.556 in costs against 0.997. The gap in mean loss (0.440) is larger than the gap in 50% CVaR (0.285).
-- Three training seeds at 50 bp give a 50% CVaR between 3.316 and 3.338 on Black-Scholes paths and between 2.881 and 2.885 on Heston paths. The spread across seeds is under a tenth of the gap to Leland.
+What the counts hide:
+
+- The baseline matters more than the network. On Black-Scholes paths at 50% the gap to Leland at 50 bp is 0.289 and the gap to the band is 0.014. The band and the network do the same thing there: trade about half as much as Leland (1.08 and 1.11 shares against 1.99) and accept a wider spread of outcomes (std 0.63 and 0.65 against 0.42).
+- Correcting the Heston volatility did not help Leland. At 14.79% its 99% CVaR is higher than at 20% in every cost row (10.03 against 9.36 at 50 bp). The first version's Heston wins were against a mis-specified baseline, but the better-specified Leland is no harder to beat.
+- The strongest Heston formula is the minimum-variance delta. With no costs it has a 99% CVaR of 6.14, against 8.56 for the Black-Scholes delta at implied volatility and 7.42 for the Heston delta ∂C/∂S. The 99% network is at 5.85.
+- The network's clearest edge is the tail. At 99% it beats the band by 0.19 to 0.23 on Black-Scholes paths at 0 and 10 bp, and by about 0.3 on Heston paths at every cost.
+- On Heston paths at 50 bp and 100 bp, at the 50% level, the unhedged position (3.21) beats every formula delta that trades daily (3.47 to 5.40). The chosen bands are 0.5 and 0.6 shares wide, close to not trading. The network trades 0.32 and 0.19 shares over the life.
+- A network is only good on the measure it was trained on. At 100 bp on Black-Scholes paths the 50% network has a 99% CVaR of 6.88, against 5.56 for Leland and 7.03 for the plain delta.
+- Seed spread is uneven. It is 0.015 at 50 bp and 50% on Black-Scholes paths (five seeds between 3.294 and 3.333) and 0.002 in the matching Heston cell. The first version quoted ± 0.001 for the first of these, which was the test-set error only.
+
+### 3.5 Run in the wrong model
+
+Nothing is refitted in this section. `results/cross_world.md`, `results/vol_shift.md` and `results/cost_shift.md` have every cell.
+
+Built for Black-Scholes, run on Heston paths. The formulas use 20% volatility. The network has no variance input. Against the band built for Black-Scholes the network is lower in 5 of 8 cells (all four at 99%, by 0.31 to 0.42, and 100 bp at 50%), ties one, and is higher in two by 0.010 and 0.023. Against Leland it is lower in 7 and ties one. Both are far behind what was built for Heston: at 50 bp and 99% the Black-Scholes network has 8.53, the Black-Scholes band 8.84, the Heston network 6.69.
+
+Built for Heston, run on Black-Scholes paths. The formulas and the network are told V = 0.04 at every date. The 99% network has a CVaR of 6.12 to 8.47 across the four costs. The band built for Heston has 4.58 to 6.66, the Leland delta at the Heston implied volatility 3.99 to 6.12, and the network trained on Black-Scholes paths 3.27 to 5.04. Against the band the Heston network is lower in one cell, ties one and is higher in six. In training its variance input ranged from near zero to several times its mean. A constant 0.04 on every date of every path is far from anything it saw.
+
+Built at 20% volatility, run at 15% and 25%. Against the band built at 20%: network lower in 7 of 16, tie in 2, higher in 7. The 50% networks stay within 0.05 of the band. The 99% networks are higher than the band by 0.10 to 0.14 at 15% and lower by 0.16 to 0.50 at 25%. Against a Leland hedge that knows the true volatility the network is lower in 10 of 16.
+
+Built for one cost, charged another. On Black-Scholes paths the network and the band lose about the same amount. Built for 50 bp and charged 100 bp, the 50% CVaR is 3.90 for the network and 3.91 for the band, against 3.81 and 3.86 when built for 100 bp. The worst case is built for no cost and charged 100 bp: 5.14 for the network and 5.11 for the band on Black-Scholes paths, 5.33 and 4.40 on Heston paths. The costless Heston network trades 2.18 shares over the life, more than any formula.
 
 ## 4. Differences from the sources
 
 Deep hedging, against Sections 5.1 and 5.2 of the paper:
 
-1. Hedging instruments. The paper hedges with the stock and a variance swap in the Heston model. Here the hedger trades the stock only, in both worlds. The Heston results are therefore not comparable with the paper's figures, and the benchmark is the Black-Scholes delta, since the Heston model hedge needs the swap.
+1. Hedging instruments. The paper hedges with the stock and a variance swap in the Heston model. Here the hedger trades the stock only, in both worlds. The Heston results are therefore not comparable with the paper's figures. The paper's model hedge needs the swap. The stock-only formula hedges here are the Heston delta and the minimum-variance delta of section 2.6.
 2. Network. One network is shared across all 30 dates, with the square root of the share of time left as an input. The paper trains a separate network for each date. There are three hidden layers of 32 units here and two hidden layers of d + 15 units there. No batch normalisation here.
 3. Inputs. Log-moneyness scaled by σ√T, time, the previous holding, and in the Heston world the current variance divided by 0.04. The paper uses log S and V.
 4. Inner minimisation. Eq. (4.6) optimises w by gradient steps together with the weights. Here w is set to the batch quantile at every step, which is the exact minimiser for the batch.
-5. Optimiser settings. Adam with the learning rate decaying from 0.002 to 0.0001, batch 1,024 for 50% CVaR and 4,096 for 99%, 3,000 and 2,000 steps. The paper uses a constant 0.005 and batch 256.
-6. Sample sizes. 200,000 training and 200,000 test paths per world. The paper tests on a million.
+5. Optimiser settings. Adam with the learning rate decaying from 0.002 to 0.0001, batch 1,024 for 50% CVaR and 4,096 for 99%, 6,000 and 4,000 steps. The paper uses a constant 0.005 and batch 256.
+6. Sample sizes. 200,000 training, 200,000 validation and 200,000 test paths per world. The paper tests on a million.
 7. Entry cost. The first trade from zero shares pays costs, as Eq. (2.1) says. This applies to every strategy equally.
 8. Precision. Network arithmetic is 32-bit. Paths and all reported losses are 64-bit: the network supplies holdings and the same numpy accounting scores every strategy.
 
 Leland:
 
 9. The comparison table charges every strategy the entry cost and reports loss before premium, so Leland is judged on CVaR, a measure it was not designed for. Section 3.2 uses Kabanov and Safarian's convention.
-10. On Heston paths the Leland and Black-Scholes deltas use σ = 0.2, the square root of the starting and long-run variance. A third formula hedge, the Black-Scholes delta with the current variance plugged in, is reported in `results/comparison.md` but is not part of the question.
+10. On Heston paths the Leland and Black-Scholes deltas use the implied volatility of the call at inception, 14.79%, and keep it for the life of the hedge. A desk would re-mark the implied volatility each day. The version with 20%, which the first version of this repository used, is kept in the tables as a hedge built for the wrong model.
 
-## 5. Variants tried
+## 5. What was chosen, and when
 
-Everything that was run before the committed full run, on exploratory paths with other seeds:
+Chosen on validation paths, inside `scripts/reproduce.py`:
 
-1. Network arithmetic in 64-bit, then 32-bit. At 50 bp on Black-Scholes paths with 2,000 steps the 50% CVaR was 3.3348 and 3.3340. Kept 32-bit because it halves the run time.
-2. Training length at the same setting: 2,000 steps gave 3.334 and 6,000 gave 3.314. Chose 3,000. Longer training would lower the network's numbers by something like half a percent.
-3. Batch 4,096 with 1,000 steps at zero cost for the first trial, then batch 1,024 for the 50% objective. Chosen for speed.
-4. Thread counts of 1, 4 and 8 were timed. One thread was kept so the run is reproducible and light on a shared machine.
-5. A 99% objective was added after the first trial with costs showed the 50% network losing to Leland in the far tail. That is a change to the design made after seeing a result. Both objectives are reported in full.
+1. Training length. Three lengths per CVaR level were trained at 50 bp in both worlds with three seeds each and scored on validation paths (`results/training_length.md`). The longest won at both levels: 6,000 steps for 50% and 4,000 for 99%. Validation CVaR was still falling, by 0.4% from 3,000 to 6,000 steps on Black-Scholes paths, so the networks are probably a little undertrained.
+2. The target and half-width of every no-trade band (`results/bands.md`).
 
-Not varied: the architecture (width, depth, activation), the cost grid, the Heston parameters and the contract. One full run was made, then repeated from a clean clone.
+Chosen before the first version, in trials that were not recorded and did not use a validation set. These are post hoc choices and nothing in the repository can show what they were tuned on:
+
+3. Network arithmetic in 32-bit after a 64-bit trial gave nearly the same CVaR.
+4. Batch sizes of 1,024 and 4,096, and the learning-rate schedule.
+5. Three hidden layers of 32 units. No other size was tried.
+6. The 99% objective. It was added after the first trial with costs showed the 50% network losing to Leland in the far tail. Both objectives are reported in full.
+
+Chosen after seeing results of the current design:
+
+7. The band grid first stopped at a half-width of 0.3 shares. In the first full run two Heston cells (50% CVaR at 50 and 100 bp) picked 0.3, the edge of the grid. The grid was extended to 1.0 and everything rerun. This lowered the band's test CVaR in those cells from 3.057 to 2.994 and from 3.372 to 3.196, and cut the network's lead there from 0.175 and 0.370 to 0.112 and 0.194. The earlier numbers are not in `results/`. They are recorded here only.
+8. The no-trade band itself was added in this revision, after the first version's results were known. So were the rule of section 2.8 and the wrong-model runs of section 3.5.
+
+The test paths of this version are a new draw. The first version's test paths are now the validation set.
+
+Not varied: the cost grid, the Heston parameters, the contract, the number of seeds. One full run was made with the final design, then repeated, and the two sets of files were identical.
 
 ## 6. Not verified
 
 - Leland (1985) and Boyle and Emanuel (1980) were not read. Their equation numbers are not given anywhere in this repository.
 - The Derman and Kamal equations are images. Eq. (1) was confirmed from the numbers printed beside it. Eq. (2) to (7) were not checked.
+- Heston (1993) and Albrecher et al. (2007) were not read. The characteristic function rests on the numerical checks in section 2.6.
+- Whalley and Wilmott (1997) was not read. Their band is not implemented.
 - Whether a GPU run gives the same tables. The code accepts `--device cuda`, but that path was not run.
-- CI has not run on GitHub.
+- Whether the results survive other Heston parameters, other maturities or strikes, or a larger network.
