@@ -3,9 +3,12 @@
     uv run python scripts/reproduce.py           full run, writes results/
     uv run python scripts/reproduce.py --fast    smoke run, writes build/results-fast/
 
-The full run trains 20 small networks on one CPU thread and takes about a
-quarter of an hour. The fast run uses the same code with small sizes and
-finishes in well under two minutes; its numbers are not the committed ones.
+    uv run python scripts/reproduce.py --workers 8    the same files, sooner
+
+The full run trains 104 small networks, each on one CPU thread. That is about
+three hours of CPU time; --workers N spreads it over N processes and does not
+change any number. The fast run uses the same code with small sizes and
+finishes in a few minutes; its numbers are not the committed ones.
 """
 
 from __future__ import annotations
@@ -29,6 +32,7 @@ def main() -> None:
     )
     parser.add_argument("--fast", action="store_true", help="small sizes, for CI")
     parser.add_argument("--device", default="cpu", help="cpu (default) or cuda")
+    parser.add_argument("--workers", type=int, default=1, help="processes used for training")
     parser.add_argument("--out", type=Path, default=None, help="output directory")
     args = parser.parse_args()
 
@@ -41,7 +45,7 @@ def main() -> None:
     cfg = with_device(RunConfig.fast() if args.fast else RunConfig.full(), args.device)
     out = args.out or (ROOT / "build" / "results-fast" if args.fast else ROOT / "results")
     start = time.perf_counter()
-    run_all(cfg, out, log=True)
+    run_all(cfg, out, log=True, workers=args.workers)
     print(f"elapsed: {time.perf_counter() - start:.0f} s")
 
 
